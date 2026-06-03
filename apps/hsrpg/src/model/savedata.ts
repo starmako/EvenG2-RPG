@@ -1,3 +1,6 @@
+import Scene from "../core/scene";
+
+
 export type savedata = {
   id?: string;
   datetime?: datetime;

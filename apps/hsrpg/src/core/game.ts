@@ -4,11 +4,11 @@ import title from "../scene/title"
 
 class Game {
   savedatas: savedata[]
-  data: savedata
+  savedata: savedata = {}
   sdk:EvenBetterSdk
   
   constructor(sdk: EvenBetterSdk) {
-    this.savedatas = localStorage.getItem("savedatas") ?? []
+    this.savedatas = JSON.parse(localStorage.getItem("savedatas") ?? '[]') 
     this.sdk = sdk
   }
   init() {
@@ -17,8 +17,8 @@ class Game {
   /*
    * ゲームの初期化とタイトル表示を行う
    */
-  start() {
-    this.data = title(this.savedatas);
+  async start() {
+    this.savedata = await title.run(this.savedatas);
     this.run()
   }
   
