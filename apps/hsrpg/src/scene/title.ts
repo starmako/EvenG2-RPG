@@ -1,5 +1,6 @@
 import { savedata } from "../model/savedata";
 import Scene from "../core/scene";
+import Game from  "../core/game";
 import {
   CreateStartUpPageContainer,
   RebuildPageContainer,
@@ -9,8 +10,9 @@ import {
   type EvenAppBridge,
 } from "@evenrealities/even_hub_sdk";
 
-const run = async (sdk, savedatas: savedata[]) => {
-  const savedata: savedata = {};
+const title = async (game: Game) => {
+  game.scene_init(this)
+  
   // 画面にNew Continue の選択肢を表示する
 
   // ユーザ操作待ち受ける
@@ -21,6 +23,10 @@ const run = async (sdk, savedatas: savedata[]) => {
   // Continue選択時
   // savedatasのid level scene datetimeを表示しユーザ操作を待ち受ける
   // 選択したセーブデータを返却する
+
+  /*
+  * グラスの表示例
+  */
 
   const page = sdk.createPage("my-page");
 
@@ -44,10 +50,6 @@ const run = async (sdk, savedatas: savedata[]) => {
   sdk.addEventListener((event) => {
     appendEventLog(`Event: ${JSON.stringify(event)}`);
   });
-};
-
-const title: Scene = {
-  run: run,
 };
 
 export default title;

@@ -5,9 +5,9 @@ export type savedata = {
   id?: string;
   datetime?: datetime;
   scene?: {
-    prev?: Scene;
-    current?: Scene;
-    next?: Scene;
+    prev?: () => void;
+    current?: () => void;
+    next?: () => void;
   }
   character?:{
     paramater?:{
