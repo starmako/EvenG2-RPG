@@ -1,10 +1,10 @@
 import { EvenBetterSdk } from '@jappyjan/even-better-sdk';
-import { savedata } from '../model/savedata';
+import { Savedata, defaultSavedata } from '../model/savedata';
 import title from "../scene/title"
 
 class Game {
-  savedatas: savedata[]
-  savedata: savedata = {}
+  savedatas: Savedata[]
+  savedata: Savedata = {}
   sdk:EvenBetterSdk
   
   constructor(sdk: EvenBetterSdk) {
@@ -23,13 +23,14 @@ class Game {
   }
   
   run(){
-    // this.scene.next に 関数が設定されていたらその関数を呼び出し
-    // this.scene.next が 空の場合は this.scene.current を実行
+    // this.savedata.scene.next に 関数が設定されていたらその関数を呼び出し
+    // this.savedata.scene.current が 空の場合は this.scene.current を実行
+    this.savedata.scene!.next && this.savedata.scene!.next() || this.savedata.scene!.current && this.savedata.scene!.current()
   }
   
   scene_init(scene: () => void){
-    this.savedata.scene.next = null;
-    this.scene.current = scene;
+    this.savedata.scene!.next = null;
+    this.savedata.scene!.current = scene;
   }
   
   save_exec() {

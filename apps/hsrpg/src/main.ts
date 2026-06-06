@@ -2,7 +2,6 @@ import './styles.css'
 import Game from './core/game'
 import { EvenBetterSdk } from '@jappyjan/even-better-sdk'
 import { withTimeout } from '../../_shared/async'
-import { appendEventLog } from '../../_shared/log'
 
 const appRoot = document.querySelector<HTMLDivElement>('#app')
 

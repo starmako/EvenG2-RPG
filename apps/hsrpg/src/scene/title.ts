@@ -1,4 +1,4 @@
-import { savedata } from "../model/savedata";
+import { Savedata } from "../model/savedata";
 import Scene from "../core/scene";
 import Game from  "../core/game";
 import {
@@ -9,9 +9,11 @@ import {
   waitForEvenAppBridge,
   type EvenAppBridge,
 } from "@evenrealities/even_hub_sdk";
+import { appendEventLog } from '../../../_shared/log'
 
 const title = async (game: Game) => {
-  game.scene_init(this)
+  console.log("title!" )
+  //game.scene_init(() => title(game))
   
   // 画面にNew Continue の選択肢を表示する
 
@@ -24,11 +26,7 @@ const title = async (game: Game) => {
   // savedatasのid level scene datetimeを表示しユーザ操作を待ち受ける
   // 選択したセーブデータを返却する
 
-  /*
-  * グラスの表示例
-  */
-
-  const page = sdk.createPage("my-page");
+  const page = game.sdk.createPage("my-page");
 
   // 3. テキスト要素を追加
   const title = page.addTextElement("Hello, Even G2!");
@@ -47,7 +45,7 @@ const title = async (game: Game) => {
   //statusEl.textContent = 'Displayed on glasses!'
 
   // 5. リングイベントをリスン
-  sdk.addEventListener((event) => {
+  game.sdk.addEventListener((event: any) => {
     appendEventLog(`Event: ${JSON.stringify(event)}`);
   });
 };

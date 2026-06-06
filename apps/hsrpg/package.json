@@ -11,7 +11,8 @@
   "dependencies": {
     "@evenrealities/even_hub_sdk": "latest",
     "@jappyjan/even-better-sdk": "^0.0.10",
-    "@jappyjan/even-realities-ui": "^0.0.10"
+    "@jappyjan/even-realities-ui": "^0.0.10",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
