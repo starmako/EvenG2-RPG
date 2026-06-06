@@ -6,25 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TY</title>
   <script type="module" src="/src/main.ts"></script>
-  <script>
-    function preview(obj, previewId){
-      let fileReader = new FileReader();
-      fileReader.onload = (function () {
-        console.log("onload")
-          document.getElementById(previewId).src = fileReader.result;
-      });
-      fileReader.readAsDataURL(obj.files[0]);
-    }
-  </script>
 </head>
-
 <body>
-  
-  <video  class="preview" id="previewVideo" controls="controls"></video>
-  
   <div id="app">
-    <input type="file" accept='video/*' onchange="preview(this, 'previewVideo');" ></input>
-    <button id="ss" >ぼたんだよ</button>
+    <video id="video" controls="controls"></video>
+    <input type="file" accept='video/*' onchange="loadVideo(this);"></input>
+    <button id="playButton" onclick="playVideo();">Play</button>
   </div>
 </body>
 

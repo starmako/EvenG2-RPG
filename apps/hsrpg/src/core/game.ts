@@ -18,7 +18,7 @@ class Game {
    * ゲームの初期化とタイトル表示を行う
    */
   async start() {
-    this.savedata = await title(this);
+    await title(this);
     this.run()
   }
   
@@ -28,7 +28,7 @@ class Game {
   }
   
   scene_init(scene: () => void){
-    this.scene.next = null;
+    this.savedata.scene.next = null;
     this.scene.current = scene;
   }
   
