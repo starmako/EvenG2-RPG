@@ -11,9 +11,7 @@ class Game {
     this.savedatas = JSON.parse(localStorage.getItem("savedatas") ?? '[]') 
     this.sdk = sdk
   }
-  init() {
-
-  }
+  
   /*
    * ゲームの初期化とタイトル表示を行う
    */
