@@ -4,16 +4,21 @@
   "name": "Clock",
   "version": "0.1.0",
   "min_app_version": "0.1.0",
+  "min_sdk_version": "0.1.0",
   "tagline": "Minimal clock display for Even G2 glasses.",
   "description": "Standalone clock app for Even G2",
   "author": "even-dev",
   "entrypoint": "index.html",
-  "permissions": {
-    "network": [
-      "evenhub.evenrealities.com"
-    ],
-    "fs": [
-      "./assets"
-    ]
-  }
+  "permissions": [
+    {"name": "network",
+      "desc": "evenhub.evenrealities.com"
+    },{
+    "name":"fs",
+      "desc": "./assets"
+    }
+  ],
+    "supported_languages": [
+    "ja",
+    "en"
+  ]
 }
