@@ -12,9 +12,6 @@
   "permissions": [
     {"name": "network",
       "desc": "evenhub.evenrealities.com"
-    },{
-    "name":"fs",
-      "desc": "./assets"
     }
   ],
     "supported_languages": [
