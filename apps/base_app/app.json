@@ -1,8 +1,8 @@
 {
-  "package_id": "com.bnm.evendev.baseappmdev",
+  "package_id": "com.bnm.evendev.baseappmdev2",
   "edition": "202601",
-  "name": "Base Template",
-  "version": "0.1.0",
+  "name": "Base Template2",
+  "version": "0.1.1",
   "min_app_version": "0.1.0",
   "min_sdk_version": "0.1.0",
   "tagline": "Base template app for Even G2 standalone development.",
