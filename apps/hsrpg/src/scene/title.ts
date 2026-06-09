@@ -7,8 +7,7 @@ const clone = <T>(value: T): T => {
 };
 
 const title = async (game: Game): Promise<void> => {
-  console.log("title!");
-
+  // タイトル画面の作成
   const page = game.sdk.createPage("title");
 
   page

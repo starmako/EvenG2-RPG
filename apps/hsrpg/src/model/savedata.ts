@@ -3,7 +3,7 @@ import { v4 as uuid } from "uuid";
 
 export type Savedata = {
   id?: string;
-  datetime?: Date;
+  datetime?: string;
   scene?: {
     prev: (() => void) | null;
     current: (() => void) | null;
