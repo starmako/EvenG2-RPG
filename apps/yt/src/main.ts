@@ -132,11 +132,11 @@ const screenshot = () => {
     try {
       ctx.drawImage(video, 0, 0, 200, 100);
 
-      applyGreen16LevelCorrection(ctx, 200, 100);
+applyG2Green16Quantize(ctx, 200, 100);
 
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
-      });
+const blob = await new Promise<Blob>((resolve, reject) => {
+  canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
+});
 
       const bytes = new Uint8Array(await blob.arrayBuffer());
 
@@ -156,4 +156,41 @@ const screenshot = () => {
 
   captureAndSend();
   intervalId = window.setInterval(captureAndSend, 3000);
+};
+
+const applyG2Green16Quantize = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) => {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+
+  const brightness = -60;
+  const contrast = 0.65;
+  const gamma = 1.8;
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    let y = 0.299 * r + 0.587 * g + 0.114 * b;
+
+    y += brightness;
+    y = (y - 128) * contrast + 128;
+    y = Math.max(0, Math.min(255, y));
+
+    y = 255 * Math.pow(y / 255, gamma);
+
+    const level = Math.round((y / 255) * 15);
+    const q = Math.round((level / 15) * 255);
+
+    data[i] = q;
+    data[i + 1] = q;
+    data[i + 2] = q;
+    data[i + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
 };
