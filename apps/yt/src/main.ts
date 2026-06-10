@@ -11,11 +11,17 @@ const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
 const input: HTMLInputElement = document.getElementsByTagName("input")[0];
 const button: HTMLButtonElement = document.getElementsByTagName("button")[0];
 
-let interval_id: any
+let intervalId: number | null = null;
+let containerReady = false;
 
 const playVideo = async () => {
-  video.play();
-  await setupImageContainer();
+  await video.play();
+
+  if (!containerReady) {
+    await setupImageContainer();
+    containerReady = true;
+  }
+
   screenshot();
 };
 button.onclick = playVideo;
@@ -31,6 +37,53 @@ const loadVideo = () => {
   video.load();
 };
 input.onchange = loadVideo;
+
+const applyGreen16LevelCorrection = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) => {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
+
+  const brightness = -30; // 全体を暗くする
+  const contrast = 0.75;  // コントラストを少し落とす
+  const gamma = 1.6;      // 明るい部分を抑える
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+
+    // 輝度化
+    let y = 0.299 * r + 0.587 * g + 0.114 * b;
+
+    // 明るさ調整
+    y += brightness;
+
+    // コントラスト調整
+    y = (y - 128) * contrast + 128;
+
+    // 範囲制限
+    y = Math.max(0, Math.min(255, y));
+
+    // ガンマ補正
+    y = 255 * Math.pow(y / 255, gamma);
+
+    // 16階調化
+    const level = Math.round((y / 255) * 15);
+    const q = Math.round((level / 15) * 255);
+
+    // グレースケールPNGとして送る
+    data[i] = q;
+    data[i + 1] = q;
+    data[i + 2] = q;
+    data[i + 3] = 255;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+};
+
 
 const bridge = await waitForEvenAppBridge();
 
@@ -57,21 +110,29 @@ const setupImageContainer = async () => {
 const screenshot = () => {
   if (!video) return;
 
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
   const canvas = document.createElement("canvas");
   canvas.width = 200;
   canvas.height = 100;
+
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
   let sending = false;
 
   async function captureAndSend() {
-    console.log(video.paused, video.ended, video.readyState);
     if (sending || video.paused || video.ended || video.readyState < 2) return;
 
     sending = true;
+
     try {
       ctx.drawImage(video, 0, 0, 200, 100);
+
+      applyGreen16LevelCorrection(ctx, 200, 100);
 
       const blob = await new Promise<Blob>((resolve, reject) => {
         canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
@@ -93,6 +154,6 @@ const screenshot = () => {
     }
   }
 
-  interval_id = setInterval(captureAndSend, 3000);
-  console.log(interval_id)
+  captureAndSend();
+  intervalId = window.setInterval(captureAndSend, 3000);
 };
