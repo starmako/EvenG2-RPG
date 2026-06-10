@@ -92,7 +92,7 @@ const setupImageContainers = async () => {
   ];
   const result = await bridge.createStartUpPageContainer(
     new CreateStartUpPageContainer({
-      containerTotalNum: 1,
+      containerTotalNum: ,
       imageObject: images,
     }),
   );
@@ -160,7 +160,7 @@ const screenshot = () => {
       await bridge.updateImageRawData(
         new ImageRawDataUpdate({
           containerID: part.id,
-          containerName: part.name,
+          //containerName: part.name,
           imageData: bytes,
         }),
       );
