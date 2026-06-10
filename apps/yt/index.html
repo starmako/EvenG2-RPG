@@ -21,16 +21,20 @@
     <div class="top-actions">
     <video id="video" controls="controls"></video>
     <input type="file" accept='video/*' onchange="loadVideo(this);"></input>
-    <button id="playButton" onclick="playVideo();">Play</button>
+    <button id="playButton" class="btn" onclick="playVideo();">Play</button>
     </div>
   </section>
 
   <section class="card">
     <div class="row">
-      <button id="plus-btn" class="btn" type="button">Counter +1</button>
-      <button id="minus-btn" class="btn" type="button">Counter -1</button>
-      <button id="reset-btn" class="btn" type="button">Reset</button>
-      <button id="sync-btn" class="btn" type="button">Sync Glasses</button>
+      <em>interval: </em>
+      <input type="number" id="interval" >
+      <button id="interval_btn" class="btn" type="button" onclick="setIntervalCycle()">apply</button>
+    </div>
+    <div class="row">
+      <em>comp rate: </em>
+      <input type="text" id="comp_rate" >
+      <button id="comp_rate_btn" class="btn" type="button" onclick="setCompRate()">apply</button>
     </div>
     <p id="status" class="status-line">Base template ready</p>
   </section>

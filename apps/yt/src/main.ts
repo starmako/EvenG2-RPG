@@ -9,7 +9,22 @@ import "./styles.css";
 
 const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
 const input: HTMLInputElement = document.getElementsByTagName("input")[0];
+const input_interval: HTMLInputElement = document.getElementsByTagName("input")[1];
+const input_comp_rate: HTMLInputElement = document.getElementsByTagName("input")[2];
 const button: HTMLButtonElement = document.getElementsByTagName("button")[0];
+
+input_interval.value = 3000
+input_comp_rate.value = 0.5
+
+let interval = input_interval.value
+let comp_rate = input_comp_rate.value
+
+const setIntervalCycle = () => {
+  interval = input_interval.value
+}
+const setCompRate = () => {
+  comp_rate = input_comp_rate.value
+}
 
 let containerReady = false;
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -49,7 +64,7 @@ const setupImageContainers = async () => {
       height: H,
       containerID: 2,
       containerName: "leftTop",
-    }),
+    }),/*
     new ImageContainerProperty({
       xPosition: 88,
       yPosition: 44,
@@ -73,7 +88,7 @@ const setupImageContainers = async () => {
       height: H,
       containerID: 5,
       containerName: "rightBottom",
-    }),
+    }),*/
   ];
   const result = await bridge.createStartUpPageContainer(
     new CreateStartUpPageContainer({
@@ -93,8 +108,8 @@ const screenshot = () => {
   }
 
   const captureAndSend4Parts = async () => {
-    const FULL_W = 400;
-    const FULL_H = 200;
+    const FULL_W = 200;
+    const FULL_H = 100;
     const PART_W = 200;
     const PART_H = 100;
 
@@ -111,9 +126,9 @@ const screenshot = () => {
 
     const parts = [
       { id: 2, name: "leftTop", sx: 0, sy: 0 },
-      { id: 3, name: "rightTop", sx: 200, sy: 0 },
+      /*{ id: 3, name: "rightTop", sx: 200, sy: 0 },
       { id: 4, name: "leftBottom", sx: 0, sy: 100 },
-      { id: 5, name: "rightBottom", sx: 200, sy: 100 },
+      { id: 5, name: "rightBottom", sx: 200, sy: 100 },*/
     ];
 
     for (const part of parts) {
@@ -137,8 +152,8 @@ const screenshot = () => {
       );
 
       const blob = await new Promise<Blob>((resolve, reject) => {
-        //partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg",0.5);
-        partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
+        partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg",comp_rate);
+        //partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
       });
       const bytes = new Uint8Array(await blob.arrayBuffer());
 
