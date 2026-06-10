@@ -8,5 +8,8 @@
   "description": "Standalone base template app for Even G2",
   "author": "even-dev",
   "entrypoint": "index.html",
-  "permissions": []
+  "permissions": [],
+    "supported_languages": [
+    "ja"
+  ]
 }
