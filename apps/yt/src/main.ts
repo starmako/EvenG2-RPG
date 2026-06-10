@@ -11,17 +11,16 @@ const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
 const input: HTMLInputElement = document.getElementsByTagName("input")[0];
 const button: HTMLButtonElement = document.getElementsByTagName("button")[0];
 
-let intervalId: number | null = null;
 let containerReady = false;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const playVideo = async () => {
   await video.play();
 
   if (!containerReady) {
-    await setupImageContainer();
+    await setupImageContainers();
     containerReady = true;
   }
-
   screenshot();
 };
 button.onclick = playVideo;
@@ -30,81 +29,59 @@ const loadVideo = () => {
   if (!input.files) return;
   const file = input.files[0];
 
-  const video: any = document.getElementById("video");
-
   const url = URL.createObjectURL(file);
   video.src = url;
   video.load();
 };
 input.onchange = loadVideo;
 
-const applyGreen16LevelCorrection = (
-  ctx: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-) => {
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-
-  const brightness = -30; // 全体を暗くする
-  const contrast = 0.75;  // コントラストを少し落とす
-  const gamma = 1.6;      // 明るい部分を抑える
-
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-
-    // 輝度化
-    let y = 0.299 * r + 0.587 * g + 0.114 * b;
-
-    // 明るさ調整
-    y += brightness;
-
-    // コントラスト調整
-    y = (y - 128) * contrast + 128;
-
-    // 範囲制限
-    y = Math.max(0, Math.min(255, y));
-
-    // ガンマ補正
-    y = 255 * Math.pow(y / 255, gamma);
-
-    // 16階調化
-    const level = Math.round((y / 255) * 15);
-    const q = Math.round((level / 15) * 255);
-
-    // グレースケールPNGとして送る
-    data[i] = q;
-    data[i + 1] = q;
-    data[i + 2] = q;
-    data[i + 3] = 255;
-  }
-
-  ctx.putImageData(imageData, 0, 0);
-};
-
-
 const bridge = await waitForEvenAppBridge();
+let intervalId: number | null = null;
 
-const setupImageContainer = async () => {
-  const image = new ImageContainerProperty({
-    xPosition: 188,
-    yPosition: 34,
-    width: 200,
-    height: 100,
-    containerID: 2,
-    containerName: "videoCapture",
-  });
-
+const setupImageContainers = async () => {
+  const W = 200;
+  const H = 100;
+  const images = [
+    new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 44,
+      width: W,
+      height: H,
+      containerID: 2,
+      containerName: "leftTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 44,
+      width: W,
+      height: H,
+      containerID: 3,
+      containerName: "rightTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 44,
+      width: W,
+      height: H,
+      containerID: 4,
+      containerName: "leftBottom",
+    }),
+    new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 44,
+      width: W,
+      height: H,
+      containerID: 5,
+      containerName: "rightBottom",
+    }),
+  ];
   const result = await bridge.createStartUpPageContainer(
     new CreateStartUpPageContainer({
-      containerTotalNum: 1,
-      imageObject: [image],
+      containerTotalNum: 4,
+      imageObject: images,
     }),
   );
-
-  console.log("createStartUpPageContainer result:", result);
+  console.log(result)
 };
 
 const screenshot = () => {
@@ -115,47 +92,70 @@ const screenshot = () => {
     intervalId = null;
   }
 
-  const canvas = document.createElement("canvas");
-  canvas.width = 200;
-  canvas.height = 100;
+  const captureAndSend4Parts = async () => {
+    const FULL_W = 400;
+    const FULL_H = 200;
+    const PART_W = 200;
+    const PART_H = 100;
 
-  const ctx = canvas.getContext("2d");
-  if (!ctx) return;
+    const fullCanvas = document.createElement("canvas");
+    fullCanvas.width = FULL_W;
+    fullCanvas.height = FULL_H;
 
-  let sending = false;
+    const fullCtx = fullCanvas.getContext("2d");
+    if (!fullCtx) return;
 
-  async function captureAndSend() {
-    if (sending || video.paused || video.ended || video.readyState < 2) return;
+    fullCtx.drawImage(video, 0, 0, FULL_W, FULL_H);
 
-    sending = true;
+    applyG2Green16Quantize(fullCtx, FULL_W, FULL_H);
 
-    try {
-      ctx.drawImage(video, 0, 0, 200, 100);
+    const parts = [
+      { id: 2, name: "leftTop", sx: 0, sy: 0 },
+      { id: 3, name: "rightTop", sx: 200, sy: 0 },
+      { id: 4, name: "leftBottom", sx: 0, sy: 100 },
+      { id: 5, name: "rightBottom", sx: 200, sy: 100 },
+    ];
 
-applyG2Green16Quantize(ctx, 200, 100);
+    for (const part of parts) {
+      const partCanvas = document.createElement("canvas");
+      partCanvas.width = PART_W;
+      partCanvas.height = PART_H;
 
-const blob = await new Promise<Blob>((resolve, reject) => {
-  canvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
-});
+      const partCtx = partCanvas.getContext("2d");
+      if (!partCtx) continue;
 
+      partCtx.drawImage(
+        fullCanvas,
+        part.sx,
+        part.sy,
+        PART_W,
+        PART_H,
+        0,
+        0,
+        PART_W,
+        PART_H,
+      );
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        //partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg",0.5);
+        partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
+      });
       const bytes = new Uint8Array(await blob.arrayBuffer());
 
       await bridge.updateImageRawData(
         new ImageRawDataUpdate({
-          containerID: 2,
-          containerName: "videoCapture",
+          containerID: part.id,
+          //containerName: part.name,
           imageData: bytes,
         }),
       );
-    } catch (e) {
-      console.error("capture/send failed:", e);
-    } finally {
-      sending = false;
+      await sleep(100);
+      console.log(`Sent ${part.name}`);
+      console.log(await bridge.getDeviceInfo())
     }
-  }
-
-  captureAndSend();
-  intervalId = window.setInterval(captureAndSend, 3000);
+  };
+  captureAndSend4Parts();
+  intervalId = window.setInterval(captureAndSend4Parts, 5000);
 };
 
 const applyG2Green16Quantize = (
