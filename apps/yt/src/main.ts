@@ -190,7 +190,7 @@ const screenshot = () => {
           imageData: bytes,
         }),
       );
-      await sleep(300);
+      await sleep(interval / 4);
       log(`Updated container ${part.name} (ID: ${part.id}), result: ${result} size: ${bytes.length} bytes`);
     }
   };
