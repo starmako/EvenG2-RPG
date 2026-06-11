@@ -135,7 +135,21 @@ const screenshot = () => {
       { id: 4, name: "leftBottom", sx: 0, sy: 100 },
       { id: 5, name: "rightBottom", sx: 200, sy: 100 },*/
     ];
+    
+    const blob = await new Promise<Blob>((resolve, reject) => {
+        fullCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/jpeg",comp_rate);
+        //partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
+      });
+      const bytes = new Uint8Array(await blob.arrayBuffer());
 
+      await bridge.updateImageRawData(
+        new ImageRawDataUpdate({
+          containerID: 2,
+          //containerName: part.name,
+          imageData: bytes,
+        }),
+      );
+      /*
     for (const part of parts) {
       const partCanvas = document.createElement("canvas");
       partCanvas.width = PART_W;
@@ -172,7 +186,9 @@ const screenshot = () => {
       await sleep(100);
       console.log(`Sent ${part.name}`);
       console.log(await bridge.getDeviceInfo())
+      
     }
+    */
   };
   captureAndSend4Parts();
   intervalId = window.setInterval(captureAndSend4Parts, 5000);
