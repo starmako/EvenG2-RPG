@@ -7,6 +7,11 @@ import {
 } from "@evenrealities/even_hub_sdk";
 import "./styles.css";
 
+
+
+const eventLog = document.getElementById("event-log")
+
+try{
 const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
 const input: HTMLInputElement = document.getElementsByTagName("input")[0];
 const input_interval: HTMLInputElement = document.getElementsByTagName("input")[1];
@@ -209,3 +214,6 @@ const applyG2Green16Quantize = (
 
   ctx.putImageData(imageData, 0, 0);
 };
+} catch (e) {
+  eventLog.innerText += e
+}
