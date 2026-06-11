@@ -9,234 +9,230 @@ import {
 import "./styles.css";
 
 const eventLog = document.getElementById("event-log");
-if(!eventLog) throw new Error("event-log element not found");
+if (!eventLog) throw new Error("event-log element not found");
 
 const log = (message: string) => {
   eventLog.innerText += message + "\n";
-}
+};
 
-try {
-  const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
-  const input: HTMLInputElement = document.getElementsByTagName("input")[0];
-  const input_interval: HTMLInputElement =
-    document.getElementsByTagName("input")[1];
-  const input_comp_rate: HTMLInputElement =
-    document.getElementsByTagName("input")[2];
-  const button: HTMLButtonElement = document.getElementsByTagName("button")[0];
-  const button_interval: HTMLButtonElement =
-    document.getElementsByTagName("button")[1];
-  const button_comp_rate: HTMLButtonElement =
-    document.getElementsByTagName("button")[2];
+const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
+const input: HTMLInputElement = document.getElementsByTagName("input")[0];
+const input_interval: HTMLInputElement =
+  document.getElementsByTagName("input")[1];
+const input_disp_width: HTMLInputElement =
+  document.getElementsByTagName("input")[2];
+const button: HTMLButtonElement = document.getElementsByTagName("button")[0];
+const button_interval: HTMLButtonElement =
+  document.getElementsByTagName("button")[1];
+const button_disp_width: HTMLButtonElement =
+  document.getElementsByTagName("button")[2];
 
-  input_interval.value = "3000";
-  input_comp_rate.value = "0.5";
+input_interval.value = "3000";
+input_disp_width.value = "140";
 
-  let interval = Number(input_interval.value);
-  let comp_rate: number = Number(input_comp_rate.value);
+let interval = Number(input_interval.value);
+let disp_width: number = Number(input_disp_width.value);
 
-  const setIntervalCycle = () => {
-    interval = Number(input_interval.value);
-    log(`Interval set to ${interval} ms`);
-  };
-  button_interval.onclick = setIntervalCycle;
-  const setCompRate = () => {
-    comp_rate = Number(input_comp_rate.value);
-    log(`Compression rate set to ${comp_rate}`);
-  };
-  button_comp_rate.onclick = setCompRate;
+let FULL_W = disp_width;
+let FULL_H = FULL_W / 2;
+let PART_W = FULL_W / 2;
+let PART_H = FULL_H / 2;
 
-  let containerReady = false;
-  const sleep = (ms: number) =>
-    new Promise((resolve) => setTimeout(resolve, ms));
+const setIntervalCycle = () => {
+  interval = Number(input_interval.value);
+  log(`Interval set to ${interval} ms`);
+};
+button_interval.onclick = setIntervalCycle;
+const setDispWidth = async() => {
+  disp_width = Number(input_disp_width.value);
+  FULL_W = disp_width;
+  FULL_H = FULL_W / 2;
+  PART_W = FULL_W / 2;
+  PART_H = FULL_H / 2;
+  await setupImageContainers();
 
-  const playVideo = async () => {
-    await video.play();
+  log(`Display width set to ${disp_width}`);
+};
+button_disp_width.onclick = setDispWidth;
 
-    if (!containerReady) {
-      await setupImageContainers();
-      containerReady = true;
-    }
-    screenshot();
-  };
-  button.onclick = playVideo;
+let containerReady = false;
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const loadVideo = () => {
-    if (!input.files) return;
-    const file = input.files[0];
+const playVideo = async () => {
+  await video.play();
 
-    const url = URL.createObjectURL(file);
-    video.src = url;
-    video.load();
-  };
-  input.onchange = loadVideo;
+  if (!containerReady) {
+    await setupImageContainers();
+    containerReady = true;
+  }
+  screenshot();
+};
+button.onclick = playVideo;
 
-  const bridge = await waitForEvenAppBridge();
-  let intervalId: number | null = null;
+const loadVideo = () => {
+  if (!input.files) return;
+  const file = input.files[0];
 
-  const setupImageContainers = async () => {
-    const W = 200;
-    const H = 100;
-    const images = [
-      new ImageContainerProperty({
-        xPosition: 88,
-        yPosition: 44,
-        width: W,
-        height: H,
-        containerID: 2,
-        containerName: "leftTop",
-      }),
-      new ImageContainerProperty({
-        xPosition: 288,
-        yPosition: 44,
-        width: W,
-        height: H,
-        containerID: 3,
-        containerName: "rightTop",
-      }) ,
+  const url = URL.createObjectURL(file);
+  video.src = url;
+  video.load();
+};
+input.onchange = loadVideo;
+
+const bridge = await waitForEvenAppBridge();
+let intervalId: number | null = null;
+
+const d_width = 576;
+const d_height = 288;
+
+const setupImageContainers = async () => {
+  await bridge.shutDownPageContainer(1)
+  const images = [
     new ImageContainerProperty({
-      xPosition: 88,
-      yPosition: 144,
-      width: W,
-      height: H,
+      xPosition: d_width / 2 - PART_W,
+      yPosition: d_height / 2 - PART_H,
+      width: PART_W,
+      height: PART_H,
+      containerID: 2,
+      containerName: "leftTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: d_width / 2,
+      yPosition: d_height / 2 - PART_H,
+      width: PART_W,
+      height: PART_H,
+      containerID: 3,
+      containerName: "rightTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: d_width / 2 - PART_W,
+      yPosition: d_height / 2,
+      width: PART_W,
+      height: PART_H,
       containerID: 4,
       containerName: "leftBottom",
     }),
     new ImageContainerProperty({
-      xPosition: 288,
-      yPosition: 144,
-      width: W,
-      height: H,
+      xPosition: d_width / 2,
+      yPosition: d_height / 2,
+      width: PART_W,
+      height: PART_H,
       containerID: 5,
       containerName: "rightBottom",
+    })
+  ];
+  await bridge.createStartUpPageContainer(
+    new CreateStartUpPageContainer({
+      containerTotalNum: 4,
+      imageObject: images,
     }),
+  );
+  
+};
+
+const screenshot = () => {
+  if (!video) return;
+
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
+  const captureAndSend4Parts = async () => {
+
+    const fullCanvas = document.createElement("canvas");
+    fullCanvas.width = FULL_W;
+    fullCanvas.height = FULL_H;
+
+    const fullCtx = fullCanvas.getContext("2d");
+    if (!fullCtx) return;
+
+    fullCtx.drawImage(video, 0, 0, FULL_W, FULL_H);
+
+    applyG2Green16Quantize(fullCtx, FULL_W, FULL_H);
+
+    const parts = [
+      { id: 2, name: "leftTop", sx: 0, sy: 0 },
+      { id: 3, name: "rightTop", sx: PART_W, sy: 0 },
+      { id: 4, name: "leftBottom", sx: 0, sy: PART_H },
+      { id: 5, name: "rightBottom", sx: PART_W, sy: PART_H },
     ];
-    await bridge.createStartUpPageContainer(
-      new CreateStartUpPageContainer({
-        containerTotalNum: 4,
-        imageObject: images,
-      }),
-    );
-  };
+    for (const part of parts) {
+      const partCanvas = document.createElement("canvas");
+      partCanvas.width = PART_W;
+      partCanvas.height = PART_H;
 
-  const screenshot = () => {
-    if (!video) return;
+      const partCtx = partCanvas.getContext("2d");
+      if (!partCtx) continue;
 
-    if (intervalId !== null) {
-      clearInterval(intervalId);
-      intervalId = null;
+      partCtx.drawImage(
+        fullCanvas,
+        part.sx,
+        part.sy,
+        PART_W,
+        PART_H,
+        0,
+        0,
+        PART_W,
+        PART_H,
+      );
+
+      const blob = await new Promise<Blob>((resolve, reject) => {
+        partCanvas.toBlob(
+          (b) => (b ? resolve(b) : reject()),"image/png");
+      });
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+
+      const result = await bridge.updateImageRawData(
+        new ImageRawDataUpdate({
+          containerID: part.id,
+          containerName: part.name,
+          imageData: bytes,
+        }),
+      );
+      await sleep(300);
+      log(`Updated container ${part.name} (ID: ${part.id}), result: ${result} size: ${bytes.length} bytes`);
     }
-
-    const captureAndSend4Parts = async () => {
-      
-      
-      const FULL_W = 400;
-      const FULL_H = 200;
-      const PART_W = 200;
-      const PART_H = 100;
-
-      const fullCanvas = document.createElement("canvas");
-      fullCanvas.width = FULL_W;
-      fullCanvas.height = FULL_H;
-
-      const fullCtx = fullCanvas.getContext("2d");
-      if (!fullCtx) return;
-
-      fullCtx.drawImage(video, 0, 0, FULL_W, FULL_H);
-
-      applyG2Green16Quantize(fullCtx, FULL_W, FULL_H);
-
-      const parts = [
-        { id: 2, name: "leftTop", sx: 0, sy: 0 },
-        { id: 3, name: "rightTop", sx: 200, sy: 0 },
-        { id: 4, name: "leftBottom", sx: 0, sy: 100 },
-        { id: 5, name: "rightBottom", sx: 200, sy: 100 },
-      ];
-      for (const part of parts) {
-        const partCanvas = document.createElement("canvas");
-        partCanvas.width = PART_W;
-        partCanvas.height = PART_H;
-
-        const partCtx = partCanvas.getContext("2d");
-        if (!partCtx) continue;
-
-        partCtx.drawImage(
-          fullCanvas,
-          part.sx,
-          part.sy,
-          PART_W,
-          PART_H,
-          0,
-          0,
-          PART_W,
-          PART_H,
-        );
-
-        const blob = await new Promise<Blob>((resolve, reject) => {
-          partCanvas.toBlob(
-            (b) => (b ? resolve(b) : reject()),
-            "image/jpeg",
-            comp_rate,
-          );
-          //partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
-        });
-        const bytes = new Uint8Array(await blob.arrayBuffer());
-
-        const result = await bridge.updateImageRawData(
-          new ImageRawDataUpdate({
-            containerID: part.id,
-            containerName: part.name,
-            imageData: bytes,
-          }),
-        );
-        await sleep(100);
-        console.log({
-          "id": part.id,
-          "name": part.name,
-          "result": result
-        });
-        log(`Updated container ${part.name} (ID: ${part.id}), result: ${result}`);
-      }
-    };
-    captureAndSend4Parts();
-    intervalId = window.setInterval(captureAndSend4Parts, interval);
   };
+  captureAndSend4Parts();
+  intervalId = window.setInterval(captureAndSend4Parts, interval);
+};
 
-  const applyG2Green16Quantize = (
-    ctx: CanvasRenderingContext2D,
-    width: number,
-    height: number,
-  ) => {
-    const imageData = ctx.getImageData(0, 0, width, height);
-    const data = imageData.data;
+const applyG2Green16Quantize = (
+  ctx: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+) => {
+  const imageData = ctx.getImageData(0, 0, width, height);
+  const data = imageData.data;
 
-    const brightness = -60;
-    const contrast = 0.65;
-    const gamma = 1.8;
+  const brightness = -60;
+  const contrast = 0.65;
+  const gamma = 1.8;
 
-    for (let i = 0; i < data.length; i += 4) {
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
 
-      let y = 0.299 * r + 0.587 * g + 0.114 * b;
+    let y = 0.299 * r + 0.587 * g + 0.114 * b;
 
-      y += brightness;
-      y = (y - 128) * contrast + 128;
-      y = Math.max(0, Math.min(255, y));
+    y += brightness;
+    y = (y - 128) * contrast + 128;
+    y = Math.max(0, Math.min(255, y));
 
-      y = 255 * Math.pow(y / 255, gamma);
+    y = 255 * Math.pow(y / 255, gamma);
 
-      const level = Math.round((y / 255) * 15);
-      const q = Math.round((level / 15) * 255);
+    const level = Math.round((y / 255) * 15);
+    const q = Math.round((level / 15) * 255);
+    //const level = Math.round((y / 255) * 7);
+    //const q = Math.round((level / 7) * 255);
 
-      data[i] = q;
-      data[i + 1] = q;
-      data[i + 2] = q;
-      data[i + 3] = 255;
-    }
+    data[i] = q;
+    data[i + 1] = q;
+    data[i + 2] = q;
+    data[i + 3] = 255;
+  }
 
-    ctx.putImageData(imageData, 0, 0);
-  };
-} catch (e) {
-  eventLog!.innerText += e;
-}
+  ctx.putImageData(imageData, 0, 0);
+};
