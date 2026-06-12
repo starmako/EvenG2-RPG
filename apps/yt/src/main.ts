@@ -12,7 +12,7 @@ const eventLog = document.getElementById("event-log");
 if (!eventLog) throw new Error("event-log element not found");
 
 const log = (message: string) => {
-  eventLog.innerText += message + "\n";
+  eventLog.innerText = new Date().toISOString() + " : " + message + "\n" + eventLog.innerText;
 };
 
 const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
@@ -28,7 +28,7 @@ const button_disp_width: HTMLButtonElement =
   document.getElementsByTagName("button")[2];
 
 input_interval.value = "3000";
-input_disp_width.value = "100";
+input_disp_width.value = "140";
 
 let interval = Number(input_interval.value);
 let disp_width: number = Number(input_disp_width.value);
@@ -43,9 +43,9 @@ const setIntervalCycle = () => {
   if (intervalId !== null) {
     clearInterval(intervalId);
     intervalId = null;
+    screenshot();
   }
   
-  screenshot();
   log(`Interval set to ${interval} ms`);
 };
 button_interval.onclick = setIntervalCycle;
@@ -59,10 +59,11 @@ const setDispWidth = async() => {
   if (intervalId !== null) {
     clearInterval(intervalId);
     intervalId = null;
+    await setupImageContainers();
+    screenshot();
+  } else {
+    await setupImageContainers();
   }
-
-  await setupImageContainers();
-  screenshot();
 
   log(`Display width set to ${disp_width}`);
 };
@@ -101,7 +102,6 @@ const d_height = 288;
 const setupImageContainers = async () => {
   
   const images = [
-    /*
     new ImageContainerProperty({
       xPosition: d_width / 2 - PART_W,
       yPosition: d_height / 2 - PART_H,
@@ -131,39 +131,6 @@ const setupImageContainers = async () => {
       yPosition: d_height / 2,
       width: PART_W,
       height: PART_H,
-      containerID: 5,
-      containerName: "rightBottom",
-    })
-    */
-        new ImageContainerProperty({
-      xPosition: 88,
-      yPosition: 44,
-      width: 200,
-      height: 100,
-      containerID: 2,
-      containerName: "leftTop",
-    }),
-    new ImageContainerProperty({
-      xPosition: 288,
-      yPosition: 44,
-      width: 200,
-      height: 100,
-      containerID: 3,
-      containerName: "rightTop",
-    }),
-    new ImageContainerProperty({
-      xPosition: 88,
-      yPosition: 144,
-      width: 200,
-      height: 100,
-      containerID: 4,
-      containerName: "leftBottom",
-    }),
-    new ImageContainerProperty({
-      xPosition: 288,
-      yPosition: 144,
-      width: 200,
-      height: 100,
       containerID: 5,
       containerName: "rightBottom",
     })
