@@ -135,12 +135,22 @@ const setupImageContainers = async () => {
       containerName: "rightBottom",
     })
   ];
-  const result = await bridge.createStartUpPageContainer(
+  let result = await bridge.createStartUpPageContainer(
     new CreateStartUpPageContainer({
       containerTotalNum: 4,
       imageObject: images,
     }),
   );
+  if(result == 1){
+    result = await bridge.rebuildPageContainer(
+      new RebuildPageContainer(
+        {
+          containerTotalNum: 4,
+      imageObject: images,
+        }
+      )
+    )
+  }
   log(`createStartUpPageContainer result: ${result}`)
 };
 
