@@ -34,22 +34,35 @@ let interval = Number(input_interval.value);
 let disp_width: number = Number(input_disp_width.value);
 
 let FULL_W = disp_width;
-let FULL_H = FULL_W / 2;
-let PART_W = FULL_W / 2;
-let PART_H = FULL_H / 2;
+let FULL_H = Math.floor(FULL_W / 2);
+let PART_W = Math.floor(FULL_W / 2);
+let PART_H = Math.floor(FULL_H / 2);
 
 const setIntervalCycle = () => {
   interval = Number(input_interval.value);
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  
+  screenshot();
   log(`Interval set to ${interval} ms`);
 };
 button_interval.onclick = setIntervalCycle;
+
 const setDispWidth = async() => {
   disp_width = Number(input_disp_width.value);
   FULL_W = disp_width;
-  FULL_H = FULL_W / 2;
-  PART_W = FULL_W / 2;
-  PART_H = FULL_H / 2;
+  FULL_H = Math.floor(FULL_W / 2);
+  PART_W = Math.floor(FULL_W / 2);
+  PART_H = Math.floor(FULL_H / 2)
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+
   await setupImageContainers();
+  screenshot();
 
   log(`Display width set to ${disp_width}`);
 };
@@ -86,7 +99,7 @@ const d_width = 576;
 const d_height = 288;
 
 const setupImageContainers = async () => {
-  await bridge.shutDownPageContainer(1)
+  
   const images = [
     new ImageContainerProperty({
       xPosition: d_width / 2 - PART_W,
@@ -121,13 +134,13 @@ const setupImageContainers = async () => {
       containerName: "rightBottom",
     })
   ];
-  await bridge.createStartUpPageContainer(
+  const result = await bridge.createStartUpPageContainer(
     new CreateStartUpPageContainer({
       containerTotalNum: 4,
       imageObject: images,
     }),
   );
-  
+  log(`createStartUpPageContainer result: ${result}`)
 };
 
 const screenshot = () => {
