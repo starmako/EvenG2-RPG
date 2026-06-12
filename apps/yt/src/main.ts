@@ -28,7 +28,7 @@ const button_disp_width: HTMLButtonElement =
   document.getElementsByTagName("button")[2];
 
 input_interval.value = "3000";
-input_disp_width.value = "140";
+input_disp_width.value = "100";
 
 let interval = Number(input_interval.value);
 let disp_width: number = Number(input_disp_width.value);
@@ -101,6 +101,7 @@ const d_height = 288;
 const setupImageContainers = async () => {
   
   const images = [
+    /*
     new ImageContainerProperty({
       xPosition: d_width / 2 - PART_W,
       yPosition: d_height / 2 - PART_H,
@@ -130,6 +131,39 @@ const setupImageContainers = async () => {
       yPosition: d_height / 2,
       width: PART_W,
       height: PART_H,
+      containerID: 5,
+      containerName: "rightBottom",
+    })
+    */
+        new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 44,
+      width: 200,
+      height: 100,
+      containerID: 2,
+      containerName: "leftTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: 288,
+      yPosition: 44,
+      width: 200,
+      height: 100,
+      containerID: 3,
+      containerName: "rightTop",
+    }),
+    new ImageContainerProperty({
+      xPosition: 88,
+      yPosition: 144,
+      width: 200,
+      height: 100,
+      containerID: 4,
+      containerName: "leftBottom",
+    }),
+    new ImageContainerProperty({
+      xPosition: 288,
+      yPosition: 144,
+      width: 200,
+      height: 100,
       containerID: 5,
       containerName: "rightBottom",
     })
