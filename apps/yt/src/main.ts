@@ -50,20 +50,29 @@ const setIntervalCycle = () => {
 };
 button_interval.onclick = setIntervalCycle;
 
-const setDispWidth = async() => {
+const setDispWidth = async () => {
+  
+  const validate = Number(input_disp_width.value);
+  if (validate > 576 || validate < 40){
+    log(`Invalid part size: ${validate}`);
+    return;
+  }
   disp_width = Number(input_disp_width.value);
-  FULL_W = disp_width;
+
+  FULL_W = Math.floor(disp_width);
   FULL_H = Math.floor(FULL_W / 2);
   PART_W = Math.floor(FULL_W / 2);
-  PART_H = Math.floor(FULL_H / 2)
+  PART_H = Math.floor(FULL_H / 2);
+
   if (intervalId !== null) {
     clearInterval(intervalId);
     intervalId = null;
-    await setupImageContainers();
-    screenshot();
-  } else {
-    await setupImageContainers();
+    await sleep(interval)
   }
+
+  await applyPageLayout();
+
+  screenshot();
 
   log(`Display width set to ${disp_width}`);
 };
@@ -76,7 +85,7 @@ const playVideo = async () => {
   await video.play();
 
   if (!containerReady) {
-    await setupImageContainers();
+    await applyPageLayout();
     containerReady = true;
   }
   screenshot();
@@ -99,8 +108,9 @@ let intervalId: number | null = null;
 const d_width = 576;
 const d_height = 288;
 
-const setupImageContainers = async () => {
-  
+let containerReady = false;
+
+const applyPageLayout = async () => {
   const images = [
     new ImageContainerProperty({
       xPosition: d_width / 2 - PART_W,
@@ -133,25 +143,29 @@ const setupImageContainers = async () => {
       height: PART_H,
       containerID: 5,
       containerName: "rightBottom",
-    })
-  ];
-  let result = await bridge.createStartUpPageContainer(
-    new CreateStartUpPageContainer({
-      containerTotalNum: 4,
-      imageObject: images,
     }),
-  );
-  if(result == 1){
-    result = await bridge.rebuildPageContainer(
-      new RebuildPageContainer(
-        {
-          containerTotalNum: 4,
-      imageObject: images,
-        }
-      )
-    )
+  ];
+
+  if (!containerReady) {
+    const result = await bridge.createStartUpPageContainer(
+      new CreateStartUpPageContainer({
+        containerTotalNum: 4,
+        imageObject: images,
+      }),
+    );
+
+    log(`createStartUpPageContainer result: ${result}`);
+    containerReady = true;
+  } else {
+    const result = await bridge.rebuildPageContainer(
+      new RebuildPageContainer({
+        containerTotalNum: 4,
+        imageObject: images,
+      }),
+    );
+
+    log(`rebuildPageContainer result: ${result}`);
   }
-  log(`createStartUpPageContainer result: ${result}`)
 };
 
 const screenshot = () => {
