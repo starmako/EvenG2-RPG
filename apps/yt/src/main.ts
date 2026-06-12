@@ -108,8 +108,6 @@ let intervalId: number | null = null;
 const d_width = 576;
 const d_height = 288;
 
-let containerReady = false;
-
 const applyPageLayout = async () => {
   const images = [
     new ImageContainerProperty({
