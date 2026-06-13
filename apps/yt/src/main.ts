@@ -5,6 +5,7 @@ import {
   CreateStartUpPageContainer,
   waitForEvenAppBridge,
   TextContainerProperty,
+  RebuildPageContainer,
 } from "@evenrealities/even_hub_sdk";
 import "./styles.css";
 
@@ -12,7 +13,8 @@ const eventLog = document.getElementById("event-log");
 if (!eventLog) throw new Error("event-log element not found");
 
 const log = (message: string) => {
-  eventLog.innerText = new Date().toISOString() + " : " + message + "\n" + eventLog.innerText;
+  eventLog.innerText =
+    new Date().toISOString() + " : " + message + "\n" + eventLog.innerText;
 };
 
 const video: HTMLVideoElement = document.getElementsByTagName("video")[0];
@@ -45,15 +47,14 @@ const setIntervalCycle = () => {
     intervalId = null;
     screenshot();
   }
-  
+
   log(`Interval set to ${interval} ms`);
 };
 button_interval.onclick = setIntervalCycle;
 
 const setDispWidth = async () => {
-  
   const validate = Number(input_disp_width.value);
-  if (validate > 576 || validate < 40){
+  if (validate > 576 || validate < 40) {
     log(`Invalid part size: ${validate}`);
     return;
   }
@@ -67,12 +68,12 @@ const setDispWidth = async () => {
   if (intervalId !== null) {
     clearInterval(intervalId);
     intervalId = null;
-    await sleep(interval)
+    await sleep(interval);
+    await applyPageLayout();
+    screenshot();
+  } else {
+    await applyPageLayout();
   }
-
-  await applyPageLayout();
-
-  screenshot();
 
   log(`Display width set to ${disp_width}`);
 };
@@ -175,7 +176,6 @@ const screenshot = () => {
   }
 
   const captureAndSend4Parts = async () => {
-
     const fullCanvas = document.createElement("canvas");
     fullCanvas.width = FULL_W;
     fullCanvas.height = FULL_H;
@@ -214,8 +214,7 @@ const screenshot = () => {
       );
 
       const blob = await new Promise<Blob>((resolve, reject) => {
-        partCanvas.toBlob(
-          (b) => (b ? resolve(b) : reject()),"image/png");
+        partCanvas.toBlob((b) => (b ? resolve(b) : reject()), "image/png");
       });
       const bytes = new Uint8Array(await blob.arrayBuffer());
 
@@ -227,7 +226,9 @@ const screenshot = () => {
         }),
       );
       await sleep(interval / 4);
-      log(`Updated container ${part.name} (ID: ${part.id}), result: ${result} size: ${bytes.length} bytes`);
+      log(
+        `Updated container(ID: ${part.id}), result: ${result} size: ${bytes.length} bytes`,
+      );
     }
   };
   captureAndSend4Parts();
@@ -259,10 +260,10 @@ const applyG2Green16Quantize = (
 
     y = 255 * Math.pow(y / 255, gamma);
 
-    const level = Math.round((y / 255) * 15);
-    const q = Math.round((level / 15) * 255);
-    //const level = Math.round((y / 255) * 7);
-    //const q = Math.round((level / 7) * 255);
+    //const level = Math.round((y / 255) * 15);
+    //const q = Math.round((level / 15) * 255);
+    const level = Math.round((y / 255) * 7);
+    const q = Math.round((level / 7) * 255);
 
     data[i] = q;
     data[i + 1] = q;
