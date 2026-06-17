@@ -1,0 +1,232 @@
+{
+  "Phase1": [
+    {
+      "id": 1,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What is this?",
+          "ja": "これは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "It is a book.",
+          "ja": "それは本です。"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What is that?",
+          "ja": "あれは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "That is a desk.",
+          "ja": "あれは机です。"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Is this a pen?",
+          "ja": "これはペンですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "Yes, it is.",
+          "ja": "はい、そうです。"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Is this a pen?",
+          "ja": "これはペンですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "No, it isn't.",
+          "ja": "いいえ、違います。"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Is this your bag?",
+          "ja": "これはあなたのかばんですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "Yes, it is.",
+          "ja": "はい、そうです。"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Is this your book?",
+          "ja": "これはあなたの本ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "No, it isn't.",
+          "ja": "いいえ、違います。"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "phase": 1,
+      "situation": "学校",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Are you Ken?",
+          "ja": "あなたはケンですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "Yes, I am.",
+          "ja": "はい、そうです。"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "phase": 1,
+      "situation": "学校",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "Are you Ken?",
+          "ja": "あなたはケンですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "No, I'm not.",
+          "ja": "いいえ、違います。"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "phase": 1,
+      "situation": "家",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What is this?",
+          "ja": "これは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "This is my book.",
+          "ja": "これは私の本です。"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "phase": 1,
+      "situation": "公園",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What is this?",
+          "ja": "これは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "It is a big ball.",
+          "ja": "それは大きなボールです。"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What are these?",
+          "ja": "これらは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "These are books.",
+          "ja": "これらは本です。"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "phase": 1,
+      "situation": "教室",
+      "dialogues": [
+        {
+          "sequence": 1,
+          "speakerNo": 1,
+          "en": "What are those?",
+          "ja": "あれらは何ですか？"
+        },
+        {
+          "sequence": 2,
+          "speakerNo": 2,
+          "en": "Those are chairs.",
+          "ja": "あれらは椅子です。"
+        }
+      ]
+    }
+  ]
+}
