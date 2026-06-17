@@ -1,73 +1,185 @@
-import './styles.css'
-import { createAutoConnector } from '../../_shared/autoconnect'
-import {
-  applyConnectionPillPhase,
-  inferConnectionPillPhaseFromStatus,
-  type ConnectionPillPhase,
-} from '../../_shared/connection-pill'
-import { createBaseAppActions, type BaseTemplateActions } from './base-template'
+type PhaseNo = 1;
 
-const appRoot = document.querySelector<HTMLDivElement>('#app')
+type PhaseJson = {
+  Phase1?: DialogueItem[];
+};
 
-if (!appRoot) {
-  throw new Error('Missing #app')
-}
+type DialogueItem = {
+  id: number;
+  speakerNo?: number;
+  sequence: number;
+  en: string;
+  ja?: string;
+};
 
+type PhaseData = Record<PhaseNo, DialogueItem[]>;
 
-const statusEl = document.querySelector<HTMLParagraphElement>('#status')
-const logEl = document.querySelector<HTMLPreElement>('#event-log')
-const heroPillEl = document.querySelector<HTMLDivElement>('#hero-pill')
-const connectBtn = document.querySelector<HTMLButtonElement>('#connect-btn')
-const minusBtn = document.querySelector<HTMLButtonElement>('#minus-btn')
-const plusBtn = document.querySelector<HTMLButtonElement>('#plus-btn')
-const resetBtn = document.querySelector<HTMLButtonElement>('#reset-btn')
-const syncBtn = document.querySelector<HTMLButtonElement>('#sync-btn')
+let phaseData: PhaseData = {
+  1: []
+};
 
-if (!statusEl || !logEl || !heroPillEl || !connectBtn || !minusBtn || !plusBtn || !resetBtn || !syncBtn) {
-  throw new Error('Missing controls')
-}
+const phaseSelect = document.getElementById('phaseSelect') as HTMLSelectElement | null;
+const sentenceList = document.getElementById('sentenceList') as HTMLUListElement | null;
+const currentText = document.getElementById('currentText') as HTMLParagraphElement | null;
+const audioPlayer = document.getElementById('audioPlayer') as HTMLAudioElement | null;
 
-function setConnectionPhase(phase: ConnectionPillPhase): void {
-  applyConnectionPillPhase(heroPillEl, phase)
-}
+const playButton = document.getElementById('playButton') as HTMLButtonElement | null;
+const stopButton = document.getElementById('stopButton') as HTMLButtonElement | null;
+const prevButton = document.getElementById('prevButton') as HTMLButtonElement | null;
+const nextButton = document.getElementById('nextButton') as HTMLButtonElement | null;
+const loopToggle = document.getElementById('loopToggle') as HTMLInputElement | null;
 
-function setStatus(text: string): void {
-  statusEl.textContent = text
-  const inferred = inferConnectionPillPhaseFromStatus(text)
-  if (inferred) {
-    setConnectionPhase(inferred)
+let currentIndex = 0;
+let currentPhase: PhaseNo = 1;
+
+function requireElement<T extends HTMLElement>(element: T | null, name: string): T {
+  if (!element) {
+    throw new Error(`${name} element not found`);
   }
+  return element;
 }
 
-const actions: BaseTemplateActions = createBaseAppActions(setStatus)
+const elements = {
+  phaseSelect: requireElement(phaseSelect, 'phaseSelect'),
+  sentenceList: requireElement(sentenceList, 'sentenceList'),
+  currentText: requireElement(currentText, 'currentText'),
+  audioPlayer: requireElement(audioPlayer, 'audioPlayer'),
+  playButton: requireElement(playButton, 'playButton'),
+  stopButton: requireElement(stopButton, 'stopButton'),
+  prevButton: requireElement(prevButton, 'prevButton'),
+  nextButton: requireElement(nextButton, 'nextButton'),
+  loopToggle: requireElement(loopToggle, 'loopToggle')
+};
 
-const logCard = logEl.closest('.card')
-if (logCard) {
-  appRoot.appendChild(logCard)
+async function loadPhaseData(): Promise<void> {
+  const response = await fetch("/json/phase1.json");
+
+  if (!response.ok) {
+    throw new Error(`Failed to load phase1.json: ${response.status}`);
+  }
+
+  const data = (await response.json()) as PhaseJson;
+
+  phaseData = {
+    1: data.Phase1 ?? []
+  };
+
+  renderSentences();
+  setCurrentSentence(0);
 }
 
-setConnectionPhase('idle')
+function renderSentences(): void {
+  elements.sentenceList.innerHTML = '';
 
-const connector = createAutoConnector({
-  connect: actions.connect,
-  onConnecting: () => {
-    setConnectionPhase('connecting')
-  },
-})
-connector.bind(connectBtn)
+  const sentences = phaseData[currentPhase];
 
-minusBtn.addEventListener('click', () => {
-  void actions.decrementCounter()
-})
+  sentences.forEach((item, index) => {
+    const li = document.createElement('li');
 
-plusBtn.addEventListener('click', () => {
-  void actions.incrementCounter('web: counter +1')
-})
+    li.textContent = item.en;
+    li.addEventListener('click', () => {
+      setCurrentSentence(index);
+      playCurrent();
+    });
 
-resetBtn.addEventListener('click', () => {
-  void actions.resetCounter()
-})
+    elements.sentenceList.appendChild(li);
+  });
+}
 
-syncBtn.addEventListener('click', () => {
-  void actions.syncGlasses()
-})
+function setCurrentSentence(index: number): void {
+  const sentences = phaseData[currentPhase];
+
+  if (sentences.length === 0) {
+    elements.currentText.textContent = '';
+    elements.audioPlayer.removeAttribute('src');
+    return;
+  }
+
+  if (index < 0) {
+    currentIndex = 0;
+  } else if (index >= sentences.length) {
+    currentIndex = sentences.length - 1;
+  } else {
+    currentIndex = index;
+  }
+
+  const item = sentences[currentIndex];
+
+  elements.currentText.textContent = item.en;
+  elements.audioPlayer.src = buildAudioPath(item, "en");
+
+  document.querySelectorAll<HTMLLIElement>('#sentenceList li').forEach((el, i) => {
+    const isActive = i === currentIndex;
+
+    el.classList.toggle('active', isActive);
+
+    if (isActive) {
+      el.scrollIntoView({
+        block: 'center',
+        behavior: 'smooth'
+      });
+    }
+  });
+}
+
+function playCurrent(): void {
+  elements.audioPlayer.play().catch((error: unknown) => {
+    console.error('Audio playback failed', error);
+  });
+}
+
+function pauseCurrent(): void {
+  elements.audioPlayer.pause();
+}
+
+function stopCurrent(): void {
+  elements.audioPlayer.pause();
+  elements.audioPlayer.currentTime = 0;
+}
+
+function playPrevious(): void {
+  setCurrentSentence(currentIndex - 1);
+  playCurrent();
+}
+
+function playNext(): void {
+  setCurrentSentence(currentIndex + 1);
+  playCurrent();
+}
+
+elements.prevButton.addEventListener('click', playPrevious);
+
+elements.nextButton.addEventListener('click', playNext);
+
+elements.playButton.addEventListener('click', () => {
+  if (elements.audioPlayer.paused) {
+    playCurrent();
+  } else {
+    pauseCurrent();
+  }
+});
+
+elements.stopButton.addEventListener('click', stopCurrent);
+
+elements.loopToggle.addEventListener('change', () => {
+  elements.audioPlayer.loop = elements.loopToggle.checked;
+});
+
+elements.phaseSelect.addEventListener('change', () => {
+  currentPhase = Number(elements.phaseSelect.value) as PhaseNo;
+  currentIndex = 0;
+  renderSentences();
+  setCurrentSentence(0);
+});
+
+loadPhaseData().catch((error: unknown) => {
+  console.error(error);
+});
+
+function buildAudioPath(
+  item: DialogueItem,
+  lang: "en" | "ja"
+): string {
+  return `./audio/${item.id}-${item.sequence}_${lang}.mp3`;
+}
+

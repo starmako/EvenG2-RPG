@@ -1,26 +1,192 @@
-@import "../node_modules/@jappyjan/even-realities-ui/dist/even-realities-ui.css";
-@import "../../_shared/styles.css";
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+:root {
+  --primary: #2563eb;
+  --primary-light: #eff6ff;
+  --border: #d1d5db;
+  --text: #111827;
+  --subtext: #6b7280;
+  --bg: #f8fafc;
+  --card: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
 
 body {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 16px;
-}
-
-.row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-}
-
-.status-line {
   margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
 }
 
-#event-log { min-height: 120px; max-height: 260px; overflow: auto; }
+.app {
+  height: 100dvh;
+  max-width: 430px;
+  margin: 0 auto;
+  background: var(--card);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
 
-@media (min-width: 420px) {
-  .row {
-    grid-template-columns: 1fr 1fr;
-  }
+.main {
+  flex: 1;
+  min-height: 0;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+h1 {
+  margin: 0 0 10px;
+  font-size: 22px;
+  line-height: 1.3;
+  flex: 0 0 auto;
+}
+
+h2 {
+  margin: 18px 0 10px;
+  font-size: 20px;
+  line-height: 1.3;
+  flex: 0 0 auto;
+}
+
+.phase-select {
+  width: 100%;
+  height: 54px;
+  flex: 0 0 auto;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background-color: #fff;
+  color: var(--text);
+  font-size: 22px;
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #111827 50%),
+    linear-gradient(135deg, #111827 50%, transparent 50%);
+  background-position:
+    calc(100% - 24px) 24px,
+    calc(100% - 16px) 24px;
+  background-size: 8px 8px, 8px 8px;
+  background-repeat: no-repeat;
+}
+
+.sentence-list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  list-style: none;
+  background: #fff;
+  flex: 1 1 auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.sentence-list li {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  min-height: 56px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 20px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sentence-list li:last-child {
+  border-bottom: none;
+}
+
+.sentence-list li.active {
+  color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: inset 4px 0 0 var(--primary);
+  font-weight: 600;
+}
+
+.current-card,
+.audio-card {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  flex: 0 0 auto;
+}
+
+.current-label {
+  margin: 0 0 8px;
+  color: var(--subtext);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.current-text {
+  margin: 0;
+  font-size: 26px;
+  line-height: 1.3;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+audio {
+  display: none;
+}
+
+.audio-controls {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.audio-controls button {
+  height: 46px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.audio-controls button:hover {
+  background: #f9fafb;
+}
+
+#playButton {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+.audio-controls label {
+  grid-column: 1 / -1;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--subtext);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+#loopToggle {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--primary);
 }
