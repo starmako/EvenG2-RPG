@@ -18,7 +18,7 @@ type DialogueItem = {
 type PhaseData = Record<PhaseNo, DialogueItem[]>;
 
 let phaseData: PhaseData = {
-  1: []
+  1: phase1  ?? []
 };
 
 const phaseSelect = document.getElementById('phaseSelect') as HTMLSelectElement | null;
@@ -53,14 +53,14 @@ const elements = {
   nextButton: requireElement(nextButton, 'nextButton'),
   loopToggle: requireElement(loopToggle, 'loopToggle')
 };
-/*
+
 async function loadPhaseData(): Promise<void> {
   const response = await fetch("/json/phase1.json");
 
   if (!response.ok) {
     throw new Error(`Failed to load phase1.json: ${response.status}`);
   }
-
+console.log(`success to load phase1.json: ${response.status}`);
   const data = (await response.json()) as PhaseJson;
 
   phaseData = {
@@ -70,7 +70,7 @@ async function loadPhaseData(): Promise<void> {
   renderSentences();
   setCurrentSentence(0);
 }
-*/
+
 function renderSentences(): void {
   elements.sentenceList.innerHTML = '';
 
@@ -174,11 +174,11 @@ elements.phaseSelect.addEventListener('change', () => {
   renderSentences();
   setCurrentSentence(0);
 });
-/*
+
 loadPhaseData().catch((error: unknown) => {
   console.error(error);
 });
-*/
+
 function buildAudioPath(
   item: DialogueItem,
   lang: "en" | "ja"
