@@ -1,6 +1,6 @@
 import './styles.css'
-import phase1 from './json/phase1.json' assert { type: 'json' };
-console.log('phase1.json loaded:', phase1);
+//import phase1 from './json/phase1.json' assert { type: 'json' };
+//console.log('phase1.json loaded:', phase1);
 type PhaseNo = 1;
 
 type PhaseJson = {
@@ -18,7 +18,7 @@ type DialogueItem = {
 type PhaseData = Record<PhaseNo, DialogueItem[]>;
 
 let phaseData: PhaseData = {
-  1: phase1  ?? []
+  1: []
 };
 
 const phaseSelect = document.getElementById('phaseSelect') as HTMLSelectElement | null;
