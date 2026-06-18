@@ -1,3 +1,6 @@
+import './styles.css'
+import phase1 from './json/phase1.json' assert { type: 'json' };
+console.log('phase1.json loaded:', phase1);
 type PhaseNo = 1;
 
 type PhaseJson = {
@@ -50,7 +53,7 @@ const elements = {
   nextButton: requireElement(nextButton, 'nextButton'),
   loopToggle: requireElement(loopToggle, 'loopToggle')
 };
-
+/*
 async function loadPhaseData(): Promise<void> {
   const response = await fetch("/json/phase1.json");
 
@@ -67,7 +70,7 @@ async function loadPhaseData(): Promise<void> {
   renderSentences();
   setCurrentSentence(0);
 }
-
+*/
 function renderSentences(): void {
   elements.sentenceList.innerHTML = '';
 
@@ -171,11 +174,11 @@ elements.phaseSelect.addEventListener('change', () => {
   renderSentences();
   setCurrentSentence(0);
 });
-
+/*
 loadPhaseData().catch((error: unknown) => {
   console.error(error);
 });
-
+*/
 function buildAudioPath(
   item: DialogueItem,
   lang: "en" | "ja"
