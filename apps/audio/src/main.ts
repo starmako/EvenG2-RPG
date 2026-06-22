@@ -1,66 +1,77 @@
-import './styles.css'
-//import phase1 from './json/phase1.json' assert { type: 'json' };
-//console.log('phase1.json loaded:', phase1);
+import './styles.css';
+
 type PhaseNo = 1;
+type Language = 'en' | 'ja';
+
+const languages: Language[] = ['en', 'ja'];
 
 type PhaseJson = {
-  Phase1?: DialogueItem[];
+  Phase1?: LessonItem[];
 };
 
-type DialogueItem = {
+type LessonItem = {
   id: number;
-  speakerNo?: number;
-  sequence: number;
-  en: string;
-  ja?: string;
+  phase: number;
+  situation: string;
+  dialogues: Dialogue[];
 };
 
-type PhaseData = Record<PhaseNo, DialogueItem[]>;
+type Dialogue = {
+  sequence: number;
+  speakerNo: number;
+  en: string;
+  ja: string;
+};
+
+type PhaseData = Record<PhaseNo, LessonItem[]>;
+
+type CurrentPosition = {
+  lessonIndex: number;
+  dialogueIndex: number;
+  langIndex: number;
+};
 
 let phaseData: PhaseData = {
   1: []
 };
 
-const phaseSelect = document.getElementById('phaseSelect') as HTMLSelectElement | null;
-const sentenceList = document.getElementById('sentenceList') as HTMLUListElement | null;
-const currentText = document.getElementById('currentText') as HTMLParagraphElement | null;
-const audioPlayer = document.getElementById('audioPlayer') as HTMLAudioElement | null;
-
-const playButton = document.getElementById('playButton') as HTMLButtonElement | null;
-const stopButton = document.getElementById('stopButton') as HTMLButtonElement | null;
-const prevButton = document.getElementById('prevButton') as HTMLButtonElement | null;
-const nextButton = document.getElementById('nextButton') as HTMLButtonElement | null;
-const loopToggle = document.getElementById('loopToggle') as HTMLInputElement | null;
-
-let currentIndex = 0;
 let currentPhase: PhaseNo = 1;
 
-function requireElement<T extends HTMLElement>(element: T | null, name: string): T {
-  if (!element) {
-    throw new Error(`${name} element not found`);
-  }
-  return element;
-}
-
-const elements = {
-  phaseSelect: requireElement(phaseSelect, 'phaseSelect'),
-  sentenceList: requireElement(sentenceList, 'sentenceList'),
-  currentText: requireElement(currentText, 'currentText'),
-  audioPlayer: requireElement(audioPlayer, 'audioPlayer'),
-  playButton: requireElement(playButton, 'playButton'),
-  stopButton: requireElement(stopButton, 'stopButton'),
-  prevButton: requireElement(prevButton, 'prevButton'),
-  nextButton: requireElement(nextButton, 'nextButton'),
-  loopToggle: requireElement(loopToggle, 'loopToggle')
+let currentPosition: CurrentPosition = {
+  lessonIndex: 0,
+  dialogueIndex: 0,
+  langIndex: 0
 };
 
+const elements = {
+  phaseSelect: requireElement<HTMLSelectElement>('phaseSelect'),
+  sentenceList: requireElement<HTMLUListElement>('sentenceList'),
+  currentText: requireElement<HTMLParagraphElement>('currentText'),
+  audioPlayer: requireElement<HTMLAudioElement>('audioPlayer'),
+  playButton: requireElement<HTMLButtonElement>('playButton'),
+  stopButton: requireElement<HTMLButtonElement>('stopButton'),
+  prevButton: requireElement<HTMLButtonElement>('prevButton'),
+  nextButton: requireElement<HTMLButtonElement>('nextButton'),
+  loopToggle: requireElement<HTMLInputElement>('loopToggle')
+};
+
+function requireElement<T extends HTMLElement>(id: string): T {
+  const element = document.getElementById(id);
+
+  if (!element) {
+    throw new Error(`${id} element not found`);
+  }
+
+  return element as T;
+}
+
 async function loadPhaseData(): Promise<void> {
-  const response = await fetch("/json/phase1.json");
+  const response = await fetch('/json/phase1.json');
 
   if (!response.ok) {
     throw new Error(`Failed to load phase1.json: ${response.status}`);
   }
-console.log(`success to load phase1.json: ${response.status}`);
+
   const data = (await response.json()) as PhaseJson;
 
   phaseData = {
@@ -68,51 +79,190 @@ console.log(`success to load phase1.json: ${response.status}`);
   };
 
   renderSentences();
-  setCurrentSentence(0);
+  setCurrentPosition({
+    lessonIndex: 0,
+    dialogueIndex: 0,
+    langIndex: 0
+  });
 }
 
 function renderSentences(): void {
   elements.sentenceList.innerHTML = '';
 
-  const sentences = phaseData[currentPhase];
+  const lessons = phaseData[currentPhase];
 
-  sentences.forEach((item, index) => {
-    const li = document.createElement('li');
+  lessons.forEach((lesson, lessonIndex) => {
+    lesson.dialogues.forEach((dialogue, dialogueIndex) => {
+      languages.forEach((lang, langIndex) => {
+        const li = document.createElement('li');
 
-    li.textContent = item.en;
-    li.addEventListener('click', () => {
-      setCurrentSentence(index);
-      playCurrent();
+        li.textContent = dialogue[lang];
+        li.dataset.lessonIndex = String(lessonIndex);
+        li.dataset.dialogueIndex = String(dialogueIndex);
+        li.dataset.langIndex = String(langIndex);
+
+        li.addEventListener('click', () => {
+          setCurrentPosition({
+            lessonIndex,
+            dialogueIndex,
+            langIndex
+          });
+
+          playCurrent();
+        });
+
+        elements.sentenceList.appendChild(li);
+      });
     });
-
-    elements.sentenceList.appendChild(li);
   });
 }
 
-function setCurrentSentence(index: number): void {
-  const sentences = phaseData[currentPhase];
+function setCurrentPosition(position: CurrentPosition): void {
+  const normalizedPosition = normalizePosition(position);
 
-  if (sentences.length === 0) {
+  if (!normalizedPosition) {
     elements.currentText.textContent = '';
     elements.audioPlayer.removeAttribute('src');
     return;
   }
 
-  if (index < 0) {
-    currentIndex = 0;
-  } else if (index >= sentences.length) {
-    currentIndex = sentences.length - 1;
-  } else {
-    currentIndex = index;
+  currentPosition = normalizedPosition;
+
+  const current = getCurrentItem();
+
+  if (!current) {
+    return;
   }
 
-  const item = sentences[currentIndex];
+  elements.currentText.textContent = current.text;
+  elements.audioPlayer.src = buildAudioPath(current.lesson, current.dialogue, current.lang);
 
-  elements.currentText.textContent = item.en;
-  elements.audioPlayer.src = buildAudioPath(item, "en");
+  updateActiveSentence();
+}
 
-  document.querySelectorAll<HTMLLIElement>('#sentenceList li').forEach((el, i) => {
-    const isActive = i === currentIndex;
+function getCurrentItem():
+  | {
+      lesson: LessonItem;
+      dialogue: Dialogue;
+      lang: Language;
+      text: string;
+    }
+  | undefined {
+  const lesson = phaseData[currentPhase][currentPosition.lessonIndex];
+
+  if (!lesson) {
+    return undefined;
+  }
+
+  const dialogue = lesson.dialogues[currentPosition.dialogueIndex];
+
+  if (!dialogue) {
+    return undefined;
+  }
+
+  const lang = languages[currentPosition.langIndex];
+  const text = dialogue[lang];
+
+  return {
+    lesson,
+    dialogue,
+    lang,
+    text
+  };
+}
+
+function normalizePosition(position: CurrentPosition): CurrentPosition | undefined {
+  const lessons = phaseData[currentPhase];
+
+  if (lessons.length === 0) {
+    return undefined;
+  }
+
+  let { lessonIndex, dialogueIndex, langIndex } = position;
+
+  if (lessonIndex < 0) {
+    lessonIndex = 0;
+    dialogueIndex = 0;
+    langIndex = 0;
+  }
+
+  if (lessonIndex >= lessons.length) {
+    const lastLessonIndex = lessons.length - 1;
+    const lastDialogueIndex = lessons[lastLessonIndex].dialogues.length - 1;
+
+    return {
+      lessonIndex: lastLessonIndex,
+      dialogueIndex: lastDialogueIndex,
+      langIndex: languages.length - 1
+    };
+  }
+
+  const lesson = lessons[lessonIndex];
+
+  if (dialogueIndex < 0) {
+    if (lessonIndex === 0) {
+      return {
+        lessonIndex: 0,
+        dialogueIndex: 0,
+        langIndex: 0
+      };
+    }
+
+    const prevLessonIndex = lessonIndex - 1;
+    const prevLesson = lessons[prevLessonIndex];
+
+    return {
+      lessonIndex: prevLessonIndex,
+      dialogueIndex: prevLesson.dialogues.length - 1,
+      langIndex: languages.length - 1
+    };
+  }
+
+  if (dialogueIndex >= lesson.dialogues.length) {
+    if (lessonIndex >= lessons.length - 1) {
+      return {
+        lessonIndex,
+        dialogueIndex: lesson.dialogues.length - 1,
+        langIndex: languages.length - 1
+      };
+    }
+
+    return {
+      lessonIndex: lessonIndex + 1,
+      dialogueIndex: 0,
+      langIndex: 0
+    };
+  }
+
+  if (langIndex < 0) {
+    return normalizePosition({
+      lessonIndex,
+      dialogueIndex: dialogueIndex - 1,
+      langIndex: languages.length - 1
+    });
+  }
+
+  if (langIndex >= languages.length) {
+    return normalizePosition({
+      lessonIndex,
+      dialogueIndex: dialogueIndex + 1,
+      langIndex: 0
+    });
+  }
+
+  return {
+    lessonIndex,
+    dialogueIndex,
+    langIndex
+  };
+}
+
+function updateActiveSentence(): void {
+  document.querySelectorAll<HTMLLIElement>('#sentenceList li').forEach((el) => {
+    const isActive =
+      Number(el.dataset.lessonIndex) === currentPosition.lessonIndex &&
+      Number(el.dataset.dialogueIndex) === currentPosition.dialogueIndex &&
+      Number(el.dataset.langIndex) === currentPosition.langIndex;
 
     el.classList.toggle('active', isActive);
 
@@ -123,6 +273,28 @@ function setCurrentSentence(index: number): void {
       });
     }
   });
+}
+
+function getNextPosition(): CurrentPosition {
+  return {
+    ...currentPosition,
+    langIndex: currentPosition.langIndex + 1
+  };
+}
+
+function getPreviousPosition(): CurrentPosition {
+  return {
+    ...currentPosition,
+    langIndex: currentPosition.langIndex - 1
+  };
+}
+
+function buildAudioPath(
+  lesson: LessonItem,
+  dialogue: Dialogue,
+  lang: Language
+): string {
+  return `/audio/${lesson.id}-${dialogue.sequence}_${lang}.mp3`;
 }
 
 function playCurrent(): void {
@@ -141,17 +313,16 @@ function stopCurrent(): void {
 }
 
 function playPrevious(): void {
-  setCurrentSentence(currentIndex - 1);
+  setCurrentPosition(getPreviousPosition());
   playCurrent();
 }
 
 function playNext(): void {
-  setCurrentSentence(currentIndex + 1);
+  setCurrentPosition(getNextPosition());
   playCurrent();
 }
 
 elements.prevButton.addEventListener('click', playPrevious);
-
 elements.nextButton.addEventListener('click', playNext);
 
 elements.playButton.addEventListener('click', () => {
@@ -168,21 +339,23 @@ elements.loopToggle.addEventListener('change', () => {
   elements.audioPlayer.loop = elements.loopToggle.checked;
 });
 
+elements.audioPlayer.addEventListener('ended', () => {
+  if (!elements.loopToggle.checked) {
+    playNext();
+  }
+});
+
 elements.phaseSelect.addEventListener('change', () => {
   currentPhase = Number(elements.phaseSelect.value) as PhaseNo;
-  currentIndex = 0;
+
   renderSentences();
-  setCurrentSentence(0);
+  setCurrentPosition({
+    lessonIndex: 0,
+    dialogueIndex: 0,
+    langIndex: 0
+  });
 });
 
 loadPhaseData().catch((error: unknown) => {
   console.error(error);
 });
-
-function buildAudioPath(
-  item: DialogueItem,
-  lang: "en" | "ja"
-): string {
-  return `./audio/${item.id}-${item.sequence}_${lang}.mp3`;
-}
-
