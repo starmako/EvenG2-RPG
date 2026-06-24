@@ -24,7 +24,7 @@ const INPUT_JSON = process.argv[2] ?? "materials/phase1-morning.json";
 const OUTPUT_DIR = process.argv[3] ?? "public/audio";
 
 const polly = new PollyClient({
-  region: process.env.AWS_REGION,
+  region: REGION,
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? ""
@@ -78,14 +78,36 @@ async function synthesizeToMp3(params: {
 
 async function main() {
   const jsonText = await readFile(INPUT_JSON, "utf-8");
-  const materials = JSON.parse(jsonText) as TeachingMaterial[];
+  const parsed = JSON.parse(jsonText);
+
+  const materials: TeachingMaterial[] = Array.isArray(parsed)
+    ? parsed
+    : Array.isArray(parsed.materials)
+      ? parsed.materials
+      : Array.isArray(parsed.items)
+        ? parsed.items
+        : Array.isArray(parsed.data)
+          ? parsed.data
+          : [parsed];
 
   await mkdir(OUTPUT_DIR, { recursive: true });
 
   for (const material of materials) {
+    if (!material.dialogues || !Array.isArray(material.dialogues)) {
+      console.warn(`skip: material id=${material.id} has no dialogues`);
+      continue;
+    }
+
     for (const dialogue of material.dialogues) {
-      const enPath = path.join(OUTPUT_DIR, `${material.id}-${dialogue.sequence}_en.mp3`);
-      const jaPath = path.join(OUTPUT_DIR, `${material.id}-${dialogue.sequence}_ja.mp3`);
+      const enPath = path.join(
+        OUTPUT_DIR,
+        `${material.id}-${dialogue.sequence}_en.mp3`
+      );
+
+      const jaPath = path.join(
+        OUTPUT_DIR,
+        `${material.id}-${dialogue.sequence}_ja.mp3`
+      );
 
       await synthesizeToMp3({
         text: dialogue.en,
