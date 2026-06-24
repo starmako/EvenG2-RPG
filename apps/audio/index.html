@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>EvenG2</title>
-  <!--<link rel="stylesheet" href="./src/styles.css">-->
   <script type="module" src="/src/main.ts"></script>
 </head>
 <body>
@@ -34,10 +33,23 @@
           <button id="stopButton">■</button>
           <button id="nextButton">⏭</button>
 
-          <label>
-            ループ再生
-            <input id="loopToggle" type="checkbox">
-          </label>
+          <div class="control-group">
+            <p class="control-label">ループ</p>
+            <div class="toggle-buttons" data-toggle-group="loop">
+              <button type="button" data-loop-mode="one">1件ループ</button>
+              <button type="button" data-loop-mode="conversation">会話ループ</button>
+              <button type="button" data-loop-mode="all">全件ループ</button>
+            </div>
+          </div>
+
+          <div class="control-group">
+            <p class="control-label">再生モード</p>
+            <div class="toggle-buttons" data-toggle-group="playback">
+              <button type="button" data-playback-mode="none">再生なし</button>
+              <button type="button" data-playback-mode="en">英語のみ</button>
+              <button type="button" data-playback-mode="enJa">英語&日本語</button>
+            </div>
+          </div>
         </div>
       </section>
     </main>

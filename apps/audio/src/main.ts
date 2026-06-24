@@ -2,6 +2,8 @@ import './styles.css';
 
 type PhaseNo = 1;
 type Language = 'en' | 'ja';
+type LoopMode = 'none' | 'one' | 'conversation' | 'all';
+type PlaybackMode = 'none' | 'en' | 'enJa';
 
 const languages: Language[] = ['en', 'ja'];
 
@@ -43,6 +45,9 @@ let currentPosition: CurrentPosition = {
   langIndex: 0
 };
 
+let loopMode: LoopMode = 'none';
+let playbackMode: PlaybackMode = 'enJa';
+
 const elements = {
   phaseSelect: requireElement<HTMLSelectElement>('phaseSelect'),
   sentenceList: requireElement<HTMLUListElement>('sentenceList'),
@@ -51,8 +56,7 @@ const elements = {
   playButton: requireElement<HTMLButtonElement>('playButton'),
   stopButton: requireElement<HTMLButtonElement>('stopButton'),
   prevButton: requireElement<HTMLButtonElement>('prevButton'),
-  nextButton: requireElement<HTMLButtonElement>('nextButton'),
-  loopToggle: requireElement<HTMLInputElement>('loopToggle')
+  nextButton: requireElement<HTMLButtonElement>('nextButton')
 };
 
 function requireElement<T extends HTMLElement>(id: string): T {
@@ -84,6 +88,9 @@ async function loadPhaseData(): Promise<void> {
     dialogueIndex: 0,
     langIndex: 0
   });
+
+  updateLoopModeButtons();
+  updatePlaybackModeButtons();
 }
 
 function renderSentences(): void {
@@ -92,28 +99,37 @@ function renderSentences(): void {
   const lessons = phaseData[currentPhase];
 
   lessons.forEach((lesson, lessonIndex) => {
+    const lessonLi = document.createElement('li');
+    lessonLi.className = 'lesson-item';
+    lessonLi.dataset.lessonIndex = String(lessonIndex);
+
+    const dialogueList = document.createElement('ul');
+    dialogueList.className = 'dialogue-list';
+
     lesson.dialogues.forEach((dialogue, dialogueIndex) => {
-      languages.forEach((lang, langIndex) => {
-        const li = document.createElement('li');
+      const dialogueLi = document.createElement('li');
 
-        li.textContent = dialogue[lang];
-        li.dataset.lessonIndex = String(lessonIndex);
-        li.dataset.dialogueIndex = String(dialogueIndex);
-        li.dataset.langIndex = String(langIndex);
+      dialogueLi.className = 'dialogue-item';
+      dialogueLi.dataset.lessonIndex = String(lessonIndex);
+      dialogueLi.dataset.dialogueIndex = String(dialogueIndex);
 
-        li.addEventListener('click', () => {
-          setCurrentPosition({
-            lessonIndex,
-            dialogueIndex,
-            langIndex
-          });
+      dialogueLi.textContent = `${dialogue.en} / ${dialogue.ja}`;
 
-          playCurrent();
+      dialogueLi.addEventListener('click', () => {
+        setCurrentPosition({
+          lessonIndex,
+          dialogueIndex,
+          langIndex: 0
         });
 
-        elements.sentenceList.appendChild(li);
+        playCurrent();
       });
+
+      dialogueList.appendChild(dialogueLi);
     });
+
+    lessonLi.appendChild(dialogueList);
+    elements.sentenceList.appendChild(lessonLi);
   });
 }
 
@@ -181,9 +197,11 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
   let { lessonIndex, dialogueIndex, langIndex } = position;
 
   if (lessonIndex < 0) {
-    lessonIndex = 0;
-    dialogueIndex = 0;
-    langIndex = 0;
+    return {
+      lessonIndex: 0,
+      dialogueIndex: 0,
+      langIndex: 0
+    };
   }
 
   if (lessonIndex >= lessons.length) {
@@ -193,7 +211,7 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
     return {
       lessonIndex: lastLessonIndex,
       dialogueIndex: lastDialogueIndex,
-      langIndex: languages.length - 1
+      langIndex: getLastLangIndex()
     };
   }
 
@@ -214,7 +232,7 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
     return {
       lessonIndex: prevLessonIndex,
       dialogueIndex: prevLesson.dialogues.length - 1,
-      langIndex: languages.length - 1
+      langIndex: getLastLangIndex()
     };
   }
 
@@ -223,7 +241,7 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
       return {
         lessonIndex,
         dialogueIndex: lesson.dialogues.length - 1,
-        langIndex: languages.length - 1
+        langIndex: getLastLangIndex()
       };
     }
 
@@ -238,11 +256,11 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
     return normalizePosition({
       lessonIndex,
       dialogueIndex: dialogueIndex - 1,
-      langIndex: languages.length - 1
+      langIndex: getLastLangIndex()
     });
   }
 
-  if (langIndex >= languages.length) {
+  if (langIndex >= getPlayableLanguages().length) {
     return normalizePosition({
       lessonIndex,
       dialogueIndex: dialogueIndex + 1,
@@ -258,11 +276,10 @@ function normalizePosition(position: CurrentPosition): CurrentPosition | undefin
 }
 
 function updateActiveSentence(): void {
-  document.querySelectorAll<HTMLLIElement>('#sentenceList li').forEach((el) => {
+  document.querySelectorAll<HTMLLIElement>('.dialogue-item').forEach((el) => {
     const isActive =
       Number(el.dataset.lessonIndex) === currentPosition.lessonIndex &&
-      Number(el.dataset.dialogueIndex) === currentPosition.dialogueIndex &&
-      Number(el.dataset.langIndex) === currentPosition.langIndex;
+      Number(el.dataset.dialogueIndex) === currentPosition.dialogueIndex;
 
     el.classList.toggle('active', isActive);
 
@@ -275,7 +292,27 @@ function updateActiveSentence(): void {
   });
 }
 
+function getPlayableLanguages(): Language[] {
+  if (playbackMode === 'en') {
+    return ['en'];
+  }
+
+  return languages;
+}
+
+function getLastLangIndex(): number {
+  return getPlayableLanguages().length - 1;
+}
+
 function getNextPosition(): CurrentPosition {
+  if (playbackMode === 'en') {
+    return {
+      lessonIndex: currentPosition.lessonIndex,
+      dialogueIndex: currentPosition.dialogueIndex + 1,
+      langIndex: 0
+    };
+  }
+
   return {
     ...currentPosition,
     langIndex: currentPosition.langIndex + 1
@@ -283,10 +320,73 @@ function getNextPosition(): CurrentPosition {
 }
 
 function getPreviousPosition(): CurrentPosition {
+  if (playbackMode === 'en') {
+    return {
+      lessonIndex: currentPosition.lessonIndex,
+      dialogueIndex: currentPosition.dialogueIndex - 1,
+      langIndex: 0
+    };
+  }
+
   return {
     ...currentPosition,
     langIndex: currentPosition.langIndex - 1
   };
+}
+
+function getFirstPosition(): CurrentPosition {
+  return {
+    lessonIndex: 0,
+    dialogueIndex: 0,
+    langIndex: 0
+  };
+}
+
+function getFirstPositionInCurrentConversation(): CurrentPosition {
+  return {
+    lessonIndex: currentPosition.lessonIndex,
+    dialogueIndex: 0,
+    langIndex: 0
+  };
+}
+
+function getLastPositionInCurrentConversation(): CurrentPosition {
+  const lesson = phaseData[currentPhase][currentPosition.lessonIndex];
+
+  return {
+    lessonIndex: currentPosition.lessonIndex,
+    dialogueIndex: Math.max(lesson.dialogues.length - 1, 0),
+    langIndex: getLastLangIndex()
+  };
+}
+
+function isSamePosition(a: CurrentPosition, b: CurrentPosition): boolean {
+  return (
+    a.lessonIndex === b.lessonIndex &&
+    a.dialogueIndex === b.dialogueIndex &&
+    a.langIndex === b.langIndex
+  );
+}
+
+function isEndOfCurrentConversation(): boolean {
+  return isSamePosition(currentPosition, getLastPositionInCurrentConversation());
+}
+
+function isEndOfAll(): boolean {
+  const lessons = phaseData[currentPhase];
+
+  if (lessons.length === 0) {
+    return true;
+  }
+
+  const lastLessonIndex = lessons.length - 1;
+  const lastLesson = lessons[lastLessonIndex];
+
+  return isSamePosition(currentPosition, {
+    lessonIndex: lastLessonIndex,
+    dialogueIndex: lastLesson.dialogues.length - 1,
+    langIndex: getLastLangIndex()
+  });
 }
 
 function buildAudioPath(
@@ -298,6 +398,23 @@ function buildAudioPath(
 }
 
 function playCurrent(): void {
+  if (playbackMode === 'none') {
+    return;
+  }
+
+  const current = getCurrentItem();
+
+  if (!current) {
+    return;
+  }
+
+  if (playbackMode === 'en' && current.lang !== 'en') {
+    setCurrentPosition({
+      ...currentPosition,
+      langIndex: 0
+    });
+  }
+
   elements.audioPlayer.play().catch((error: unknown) => {
     console.error('Audio playback failed', error);
   });
@@ -322,6 +439,54 @@ function playNext(): void {
   playCurrent();
 }
 
+function handleAudioEnded(): void {
+  if (playbackMode === 'none') {
+    return;
+  }
+
+  if (loopMode === 'one') {
+    elements.audioPlayer.currentTime = 0;
+    playCurrent();
+    return;
+  }
+
+  if (loopMode === 'conversation' && isEndOfCurrentConversation()) {
+    setCurrentPosition(getFirstPositionInCurrentConversation());
+    playCurrent();
+    return;
+  }
+
+  if (loopMode === 'all' && isEndOfAll()) {
+    setCurrentPosition(getFirstPosition());
+    playCurrent();
+    return;
+  }
+
+  if (loopMode === 'none' && isEndOfAll()) {
+    return;
+  }
+
+  if (loopMode === 'none' && isEndOfCurrentConversation()) {
+    return;
+  }
+
+  playNext();
+}
+
+function updateLoopModeButtons(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-loop-mode]').forEach((button) => {
+    const mode = button.dataset.loopMode as LoopMode;
+    button.classList.toggle('active', mode === loopMode);
+  });
+}
+
+function updatePlaybackModeButtons(): void {
+  document.querySelectorAll<HTMLButtonElement>('[data-playback-mode]').forEach((button) => {
+    const mode = button.dataset.playbackMode as PlaybackMode;
+    button.classList.toggle('active', mode === playbackMode);
+  });
+}
+
 elements.prevButton.addEventListener('click', playPrevious);
 elements.nextButton.addEventListener('click', playNext);
 
@@ -335,14 +500,32 @@ elements.playButton.addEventListener('click', () => {
 
 elements.stopButton.addEventListener('click', stopCurrent);
 
-elements.loopToggle.addEventListener('change', () => {
-  elements.audioPlayer.loop = elements.loopToggle.checked;
+elements.audioPlayer.addEventListener('ended', handleAudioEnded);
+
+document.querySelectorAll<HTMLButtonElement>('[data-loop-mode]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const selectedMode = button.dataset.loopMode as Exclude<LoopMode, 'none'>;
+
+    loopMode = loopMode === selectedMode ? 'none' : selectedMode;
+    updateLoopModeButtons();
+  });
 });
 
-elements.audioPlayer.addEventListener('ended', () => {
-  if (!elements.loopToggle.checked) {
-    playNext();
-  }
+document.querySelectorAll<HTMLButtonElement>('[data-playback-mode]').forEach((button) => {
+  button.addEventListener('click', () => {
+    const selectedMode = button.dataset.playbackMode as PlaybackMode;
+
+    playbackMode = playbackMode === selectedMode ? 'none' : selectedMode;
+
+    if (playbackMode === 'en' && currentPosition.langIndex !== 0) {
+      setCurrentPosition({
+        ...currentPosition,
+        langIndex: 0
+      });
+    }
+
+    updatePlaybackModeButtons();
+  });
 });
 
 elements.phaseSelect.addEventListener('change', () => {
