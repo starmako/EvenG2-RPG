@@ -80,8 +80,8 @@ async function main() {
   const jsonText = await readFile(INPUT_JSON, "utf-8");
   const parsed = JSON.parse(jsonText);
 
-  const materials: TeachingMaterial[] = Array.isArray(parsed)
-    ? parsed
+  const materials: TeachingMaterial[] = Array.isArray(parsed.Phase1)
+    ? parsed.Phase1
     : Array.isArray(parsed.materials)
       ? parsed.materials
       : Array.isArray(parsed.items)
