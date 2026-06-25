@@ -190,3 +190,69 @@ audio {
   height: 22px;
   accent-color: var(--primary);
 }
+.lesson-item {
+  padding: 0;
+  list-style: none;
+}
+
+.dialogue-list {
+  margin: 0;
+  padding-left: 8px;
+  list-style: none;
+}
+
+.dialogue-item {
+  padding: 10px 12px;
+}
+.control-group {
+  grid-column: 1 / -1;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.toggle-buttons button {
+  flex: 1;
+  height: 42px;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.control-label {
+  width: 70px;
+  font-size: 15px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.toggle-buttons {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.toggle-buttons button:hover {
+  background: #f9fafb;
+}
+
+/* 選択中 */
+.toggle-buttons button.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+
+/* タップ時 */
+.toggle-buttons button:active {
+  transform: scale(0.98);
+}
